@@ -286,20 +286,26 @@ class _TaskListPageState extends State<TaskListPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Offline Task Tracker'),
+        backgroundColor: Colors.blueAccent,
+        title: const Text(
+          'Offline Task Tracker',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.cloud_download),
             tooltip: 'Download from Server',
             onPressed: downloadTasksFromServer,
+            color: Colors.white,
           ),
           IconButton(
             icon: const Icon(Icons.sync),
             tooltip: 'Sync to Server',
             onPressed: syncAllTasksToServer,
+            color: Colors.white,
           ),
           IconButton(
-            icon: const Icon(Icons.check_circle),
+            icon: const Icon(Icons.check_circle_outline),
             tooltip: 'View Synced Tasks',
             onPressed: () {
               Navigator.push(
@@ -307,46 +313,87 @@ class _TaskListPageState extends State<TaskListPage> {
                 MaterialPageRoute(builder: (_) => const HivePage()),
               );
             },
+            color: Colors.white,
           ),
         ],
       ),
       body: tasks.isEmpty
-          ? const Center(child: Text('No tasks yet.'))
-          : ListView.builder(
-              itemCount: tasks.length,
-              itemBuilder: (_, index) {
-                final task = tasks[index];
-                return ListTile(
-                  title: Text(
-                    task.title,
-                    style: TextStyle(
-                      decoration:
-                          task.isDone ? TextDecoration.lineThrough : null,
+          ? const Center(
+              child: Text(
+                'No tasks yet.',
+                style: TextStyle(fontSize: 18, color: Colors.grey),
+              ),
+            )
+          : Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: ListView.separated(
+                itemCount: tasks.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 8),
+                itemBuilder: (context, index) {
+                  final task = tasks[index];
+                  return Card(
+                    elevation: 2,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 12),
+                      leading: GestureDetector(
+                        onTap: () => toggleTask(task),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: task.isDone
+                                ? Theme.of(context).colorScheme.primary
+                                : Colors.grey.shade300,
+                          ),
+                          child: Icon(
+                            task.isDone ? Icons.check : Icons.circle_outlined,
+                            color: task.isDone ? Colors.white : Colors.grey,
+                            size: 28,
+                          ),
+                        ),
+                      ),
+                      title: Text(
+                        task.title,
+                        style: TextStyle(
+                          fontSize: 17,
+                          fontWeight: FontWeight.w600,
+                          decoration:
+                              task.isDone ? TextDecoration.lineThrough : null,
+                          color: task.isDone ? Colors.grey : Colors.black87,
+                        ),
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.edit,
+                                color: Colors.blueAccent),
+                            tooltip: 'Edit Task',
+                            onPressed: () => showTaskDialog(task: task),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.delete, color: Colors.grey),
+                            tooltip: 'Delete Task',
+                            onPressed: () => deleteTask(task),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  leading: Checkbox(
-                    value: task.isDone,
-                    onChanged: (_) => toggleTask(task),
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit),
-                        onPressed: () => showTaskDialog(task: task),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete),
-                        onPressed: () => deleteTask(task),
-                      ),
-                    ],
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => showTaskDialog(),
-        child: const Icon(Icons.add),
+        label: const Text(
+          'Add Task',
+          style: TextStyle(fontWeight: FontWeight.w700),
+        ),
+        icon: const Icon(Icons.add),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        foregroundColor: Colors.blueAccent,
       ),
     );
   }

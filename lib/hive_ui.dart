@@ -51,7 +51,6 @@
 //   }
 // }
 
-
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'task.dart';
@@ -65,8 +64,9 @@ class HivePage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('All Tasks'),
-        backgroundColor: Colors.teal,
+        title: const Text('All Tasks',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+        backgroundColor: Colors.blueAccent,
         elevation: 4,
       ),
       body: ValueListenableBuilder(
@@ -96,9 +96,12 @@ class HivePage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   leading: Icon(
-                    task.isDone ? Icons.check_circle : Icons.radio_button_unchecked,
+                    task.isDone
+                        ? Icons.check_circle
+                        : Icons.radio_button_unchecked,
                     color: task.isDone ? Colors.green : Colors.grey,
                     size: 28,
                   ),
@@ -106,7 +109,8 @@ class HivePage extends StatelessWidget {
                     task.title,
                     style: TextStyle(
                       fontSize: 18,
-                      decoration: task.isDone ? TextDecoration.lineThrough : null,
+                      decoration:
+                          task.isDone ? TextDecoration.lineThrough : null,
                       color: task.isDone ? Colors.grey.shade700 : Colors.black,
                     ),
                   ),
