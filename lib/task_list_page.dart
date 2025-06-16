@@ -44,64 +44,79 @@ class _TaskListPageState extends State<TaskListPage> {
       } catch (_) {
         await dio.post('/tasks', data: {'id': id, ...data});
       }
+
+      task.isSynced = true;
+      await task.save();
     }
   }
 
   Future<void> syncAllTasksToServer() async {
-    if (await checkInternetConnection()) {
-      for (var task in taskBox.values) {
-        await syncToServer(task);
+    if (!await checkInternetConnection()) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No internet connection')),
+        );
       }
+      return;
+    }
+
+    final tasks = taskBox.values.toList();
+
+    try {
+      await Future.wait(tasks.map((task) => syncToServer(task)));
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('All tasks synced to server')),
         );
       }
-    } else {
+    } catch (e) {
+      debugPrint('Error syncing tasks: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No internet connection')),
+          const SnackBar(content: Text('Some tasks failed to sync')),
         );
       }
     }
   }
 
   Future<void> downloadTasksFromServer() async {
-    if (await checkInternetConnection()) {
-      try {
-        final response = await dio.get('/tasks');
-        final List tasks = response.data;
-
-        for (var item in tasks) {
-          final task = Task(
-            title: item['title'] ?? '',
-            isDone: item['isDone'] ?? false,
-          );
-          final id = int.tryParse(item['id'].toString());
-
-          if (id != null && taskBox.containsKey(id)) {
-            await taskBox.put(id, task);
-          } else {
-            await taskBox.add(task);
-          }
-        }
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Downloaded tasks from server')),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Failed to download from server')),
-          );
-        }
-      }
-    } else {
+    if (!await checkInternetConnection()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('No internet connection')),
+        );
+      }
+      return;
+    }
+
+    try {
+      final response = await dio.get('/tasks');
+      final List tasks = response.data;
+
+      await Future.wait(tasks.map((item) async {
+        final task = Task(
+          title: item['title'] ?? '',
+          isDone: item['isDone'] ?? false,
+        );
+        final id = int.tryParse(item['id'].toString());
+
+        if (id != null && taskBox.containsKey(id)) {
+          await taskBox.put(id, task);
+        } else {
+          await taskBox.add(task);
+        }
+      }));
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Downloaded tasks from server')),
+        );
+      }
+    } catch (e) {
+      debugPrint('Download error: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to download from server')),
         );
       }
     }
